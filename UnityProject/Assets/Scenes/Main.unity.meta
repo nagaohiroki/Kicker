@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 50bd2ed8735208e4d9e4a76e44bdcf24
+labels:
+- Mru
 DefaultImporter:
   externalObjects: {}
   userData: 

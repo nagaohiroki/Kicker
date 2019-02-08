@@ -11,13 +11,17 @@ public class PlayerKicker : MonoBehaviour
 	PhotonTransformView mPVTransform;
 	[SerializeField]
 	TextMesh mUserName;
+	float mDashSpeed;
 	void Start()
 	{
 		if(myPV == null || mUserName == null || mRigidbody == null)
 		{
 			return;
 		}
-		mUserName.text = myPV.Owner.NickName;
+		if(myPV.Owner != null)
+		{
+			mUserName.text = myPV.Owner.NickName;
+		}
 		mRigidbody.isKinematic = !myPV.IsMine;
 	}
 	void Update()
@@ -36,8 +40,21 @@ public class PlayerKicker : MonoBehaviour
 		}
 		CameraHandle.transform.position = transform.position;
 		var vec = Vector3.zero;
-		vec.x = Input.GetAxis("Horizontal") * 0.1f;
-		vec.z = Input.GetAxis("Vertical") * 0.1f;
-		mRigidbody.MovePosition(transform.position + vec);
+		const float minSpeed = 0.1f;
+		//	if(minSpeed < mDashSpeed)
+		//	{
+		//		mDashSpeed -= Time.deltaTime * 10.0f;
+		//	}
+		//	if(Input.GetKeyDown(KeyCode.Space))
+		//	{
+		//		mDashSpeed = 0.5f;
+		//	}
+		vec.x = Input.GetAxis("Horizontal");
+		vec.z = Input.GetAxis("Vertical");
+		mRigidbody.MovePosition(transform.position + vec * minSpeed);
+		if (vec.magnitude > 0.0f)
+		{
+			mRigidbody.MoveRotation(Quaternion.Euler(0.0f, Mathf.Rad2Deg * Mathf.Atan2(vec.x, vec.z), 0.0f));
+		}
 	}
 }

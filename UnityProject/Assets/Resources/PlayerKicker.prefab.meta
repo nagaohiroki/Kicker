@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 74c7a0f8f3ee5cd408500b8922664ead
+labels:
+- Mru
 PrefabImporter:
   externalObjects: {}
   userData: 
