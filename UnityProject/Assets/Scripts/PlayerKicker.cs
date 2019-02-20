@@ -40,15 +40,7 @@ public class PlayerKicker : MonoBehaviour
 		}
 		CameraHandle.transform.position = transform.position;
 		var vec = Vector3.zero;
-		const float minSpeed = 0.1f;
-		//	if(minSpeed < mDashSpeed)
-		//	{
-		//		mDashSpeed -= Time.deltaTime * 10.0f;
-		//	}
-		//	if(Input.GetKeyDown(KeyCode.Space))
-		//	{
-		//		mDashSpeed = 0.5f;
-		//	}
+		const float minSpeed = 0.5f;
 		vec.x = Input.GetAxis("Horizontal");
 		vec.z = Input.GetAxis("Vertical");
 		mRigidbody.MovePosition(transform.position + vec * minSpeed);

@@ -2,8 +2,14 @@
 using UnityEngine.UI;
 using Photon.Realtime;
 using Photon.Pun;
+using System.Collections.Generic;
 public class GameManager : MonoBehaviourPunCallbacks
 {
+	public enum Team
+	{
+		Left,
+		Right,
+	}
 	[SerializeField]
 	PlayerKicker mPlayerPrefab;
 	[SerializeField]
@@ -11,7 +17,12 @@ public class GameManager : MonoBehaviourPunCallbacks
 	[SerializeField]
 	Text mUserName;
 	[SerializeField]
+	Text mTitle;
+	[SerializeField]
 	GameObject mLogin;
+	[SerializeField]
+	GameObject mBall;
+	Dictionary<Team, int> mScore;
 	//ログインボタンを押したときに実行される
 	public void Connect()
 	{
@@ -45,5 +56,29 @@ public class GameManager : MonoBehaviourPunCallbacks
 		var player =  go.GetComponent<PlayerKicker>();
 		player.CameraHandle = mCameraHandle;
 		mLogin.SetActive(false);
+	}
+	public void Goal(Team inTeam)
+	{
+		if(mScore == null || !mScore.ContainsKey(inTeam))
+		{
+			return;
+		}
+		++mScore[inTeam];
+		mTitle.gameObject.SetActive(true);
+		mTitle.text = string.Format("{0} - {1}", mScore[Team.Left], mScore[Team.Right]);
+	}
+	void StartGame()
+	{
+		mScore = new Dictionary<Team, int>
+		{
+			{Team.Left, 0},
+			{Team.Right, 0},
+		};
+		mTitle.gameObject.SetActive(false);
+		mBall.transform.position = Vector3.zero;
+	}
+	void Start()
+	{
+		StartGame();
 	}
 }
