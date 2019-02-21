@@ -23,6 +23,8 @@ public class GameManager : MonoBehaviourPunCallbacks
 	[SerializeField]
 	GameObject mBall;
 	Dictionary<Team, int> mScore;
+	float mGoalTime;
+	bool mIsGaol;
 	//ログインボタンを押したときに実行される
 	public void Connect()
 	{
@@ -59,6 +61,10 @@ public class GameManager : MonoBehaviourPunCallbacks
 	}
 	public void Goal(Team inTeam)
 	{
+		if(mIsGaol)
+		{
+			return;
+		}
 		if(mScore == null || !mScore.ContainsKey(inTeam))
 		{
 			return;
@@ -66,19 +72,47 @@ public class GameManager : MonoBehaviourPunCallbacks
 		++mScore[inTeam];
 		mTitle.gameObject.SetActive(true);
 		mTitle.text = string.Format("{0} - {1}", mScore[Team.Left], mScore[Team.Right]);
+		mGoalTime = 5.0f;
+		mIsGaol = true;
 	}
 	void StartGame()
 	{
-		mScore = new Dictionary<Team, int>
+		if(mScore == null)
 		{
-			{Team.Left, 0},
-			{Team.Right, 0},
-		};
+			mScore = new Dictionary<Team, int>
+			{
+				{Team.Left, 0},
+				{Team.Right, 0},
+			};
+		}
 		mTitle.gameObject.SetActive(false);
+		var rigid = mBall.GetComponent<Rigidbody>();
+		if (rigid != null)
+		{
+			rigid.Sleep();
+		}
 		mBall.transform.position = Vector3.zero;
+		mIsGaol = false;
+		mGoalTime = 0.0f;
+	}
+	void UpdateGoalTime()
+	{
+		if(!mIsGaol)
+		{
+			return;
+		}
+		mGoalTime -= Time.deltaTime;
+		if(mGoalTime <= 0.0f)
+		{
+			StartGame();
+		}
 	}
 	void Start()
 	{
 		StartGame();
+	}
+	void Update()
+	{
+		UpdateGoalTime();
 	}
 }
