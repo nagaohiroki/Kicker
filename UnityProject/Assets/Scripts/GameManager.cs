@@ -57,6 +57,23 @@ public class GameManager : MonoBehaviourPunCallbacks
 		var go = PhotonNetwork.Instantiate(mPlayerPrefab.name, new Vector3(0f, 10.0f, 0f), Quaternion.identity, 0);
 		var player =  go.GetComponent<PlayerKicker>();
 		player.CameraHandle = mCameraHandle;
+		player.Ball = mBall.GetComponent<Rigidbody>();
+		var players = FindObjectsOfType<PlayerKicker>();
+		int left = 0;;
+		int right = 0;;
+		foreach(var item in players)
+		{
+			switch(item.Team)
+			{
+			case Team.Left:
+				++left;
+				break;
+			case Team.Right:
+				++right;
+				break;
+			}
+		}
+		player.SetTeam(Team.Left);
 		mLogin.SetActive(false);
 	}
 	public void Goal(Team inTeam)
@@ -87,7 +104,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 		}
 		mTitle.gameObject.SetActive(false);
 		var rigid = mBall.GetComponent<Rigidbody>();
-		if (rigid != null)
+		if(rigid != null)
 		{
 			rigid.Sleep();
 		}
