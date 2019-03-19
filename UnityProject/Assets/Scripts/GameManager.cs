@@ -17,6 +17,8 @@ public class GameManager : MonoBehaviourPunCallbacks
 	[SerializeField]
 	Text mUserName;
 	[SerializeField]
+	Text mLog;
+	[SerializeField]
 	Text mTitle;
 	[SerializeField]
 	GameObject mLogin;
@@ -41,7 +43,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 	}
 	public override void OnJoinedRoom()
 	{
-		Debug.Log("ルームに入りました。");
+		Debug.Log("ルームに入りました。 Master " + PhotonNetwork.LocalPlayer.IsMasterClient);
 		if(mUserName != null)
 		{
 			PhotonNetwork.LocalPlayer.NickName = mUserName.text;
@@ -54,13 +56,12 @@ public class GameManager : MonoBehaviourPunCallbacks
 		{
 			return;
 		}
-		var go = PhotonNetwork.Instantiate(mPlayerPrefab.name, new Vector3(0f, 10.0f, 0f), Quaternion.identity, 0);
+		var go = PhotonNetwork.Instantiate(mPlayerPrefab.name, new Vector3(0f, 0.5f, 0f), Quaternion.identity, 0);
 		var player =  go.GetComponent<PlayerKicker>();
 		player.CameraHandle = mCameraHandle;
-		player.Ball = mBall.GetComponent<Rigidbody>();
 		var players = FindObjectsOfType<PlayerKicker>();
-		int left = 0;;
-		int right = 0;;
+		int left = 0;
+		int right = 0;
 		foreach(var item in players)
 		{
 			switch(item.Team)
@@ -73,7 +74,8 @@ public class GameManager : MonoBehaviourPunCallbacks
 				break;
 			}
 		}
-		player.SetTeam(Team.Left);
+		var team = left >= right ? Team.Left : Team.Right;
+		player.SetTeam(team, mBall);
 		mLogin.SetActive(false);
 	}
 	public void Goal(Team inTeam)
@@ -86,7 +88,12 @@ public class GameManager : MonoBehaviourPunCallbacks
 		{
 			return;
 		}
-		++mScore[inTeam];
+
+		if(PhotonNetwork.LocalPlayer.IsMasterClient)
+		{
+			++mScore[inTeam];
+			photonView.RPC("SyncScore", RpcTarget.Others, mScore);
+		}
 		mTitle.gameObject.SetActive(true);
 		mTitle.text = string.Format("{0} - {1}", mScore[Team.Left], mScore[Team.Right]);
 		mGoalTime = 5.0f;
@@ -131,5 +138,10 @@ public class GameManager : MonoBehaviourPunCallbacks
 	void Update()
 	{
 		UpdateGoalTime();
+	}
+	[PunRPC]
+	void SyncScore(Dictionary<Team, int> inScore)
+	{
+		mScore = inScore;
 	}
 }

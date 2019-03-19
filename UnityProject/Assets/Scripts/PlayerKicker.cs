@@ -4,7 +4,6 @@ using System.Collections.Generic;
 public class PlayerKicker : MonoBehaviour
 {
 	public Transform CameraHandle{private get; set;}
-	public Rigidbody Ball{private get; set;}
 	public GameManager.Team Team{get; set;}
 	[SerializeField]
 	Rigidbody mRigidbody;
@@ -14,12 +13,13 @@ public class PlayerKicker : MonoBehaviour
 	PhotonTransformView mPVTransform;
 	[SerializeField]
 	TextMesh mUserName;
+	Rigidbody mBallRigid;
 	// ------------------------------------------------------------------------
 	/// @brief チームを設定
 	///
 	/// @param inTeam
 	// ------------------------------------------------------------------------
-	public void SetTeam(GameManager.Team inTeam)
+	public void SetTeam(GameManager.Team inTeam, GameObject inBall)
 	{
 		Team = inTeam;
 		var dic = new Dictionary<GameManager.Team, Color>
@@ -28,6 +28,21 @@ public class PlayerKicker : MonoBehaviour
 			{GameManager.Team.Right, Color.blue},
 		};
 		mUserName.color = dic[inTeam];
+		if(inBall == null)
+		{
+			return;
+		}
+		mBallRigid = inBall.GetComponent<Rigidbody>();
+		if(PhotonNetwork.LocalPlayer.IsMasterClient)
+		{
+			return;
+		}
+		if(mBallRigid == null)
+		{
+			return;
+		}
+		mBallRigid.isKinematic = true;
+		mBallRigid.useGravity = false;
 	}
 	// ------------------------------------------------------------------------
 	/// @brief 自分更新
@@ -40,7 +55,7 @@ public class PlayerKicker : MonoBehaviour
 		}
 		CameraHandle.transform.position = transform.position;
 		var vec = Vector3.zero;
-		const float minSpeed = 0.5f;
+		const float minSpeed = 0.25f;
 		vec.x = Input.GetAxis("Horizontal");
 		vec.z = Input.GetAxis("Vertical");
 		mRigidbody.MovePosition(transform.position + vec * minSpeed);
@@ -48,7 +63,7 @@ public class PlayerKicker : MonoBehaviour
 		{
 			mRigidbody.MoveRotation(Quaternion.Euler(0.0f, Mathf.Rad2Deg * Mathf.Atan2(vec.x, vec.z), 0.0f));
 		}
-		if(Input.GetKeyDown(KeyCode.Space))
+		if(Input.GetButtonDown("Fire1"))
 		{
 			Kick();
 		}
@@ -58,16 +73,17 @@ public class PlayerKicker : MonoBehaviour
 	// ------------------------------------------------------------------------
 	void Kick()
 	{
-		if(!Ball)
+		Debug.Log("Kick");
+		if(!mBallRigid)
 		{
 			return;
 		}
-		var vec = Ball.position - mRigidbody.position;
-		if(vec.magnitude > 2.0f)
+		var vec = mBallRigid.position - mRigidbody.position;
+		if(vec.magnitude > 10.0f)
 		{
 			return;
 		}
-		Ball.AddForce(vec.normalized * 10.0f, ForceMode.VelocityChange);
+		mBallRigid.AddForce(vec.normalized * 10.0f, ForceMode.VelocityChange);
 	}
 	// ------------------------------------------------------------------------
 	/// @brief 初回更新
@@ -82,7 +98,7 @@ public class PlayerKicker : MonoBehaviour
 		{
 			mUserName.text = myPV.Owner.NickName;
 		}
-		mRigidbody.isKinematic = !myPV.IsMine;
+		//	mRigidbody.isKinematic = !myPV.IsMine;
 	}
 	// ------------------------------------------------------------------------
 	/// @brief 更新
@@ -95,5 +111,22 @@ public class PlayerKicker : MonoBehaviour
 			return;
 		}
 	}
+	void OnCollisionEnter(Collision inColl) 
+	{
+		if (inColl.gameObject.layer != LayerMask.NameToLayer("Ball"))
+		{
+			return;
+		}
+		var rigid = inColl.gameObject.GetComponent<Rigidbody>();
+		if(!rigid)
+		{
+			return;
+		}
+		var vec = rigid.position - mRigidbody.position;
+		if(vec.magnitude > 10.0f)
+		{
+			return;
+		}
+		rigid.AddForce(vec.normalized * 10.0f, ForceMode.VelocityChange);
+	}
 }
-
