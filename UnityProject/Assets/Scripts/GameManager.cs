@@ -80,22 +80,25 @@ public class GameManager : MonoBehaviourPunCallbacks
 	}
 	public void Goal(Team inTeam)
 	{
+		if(!PhotonNetwork.LocalPlayer.IsMasterClient)
+		{
+			return;
+		}
+		++mScore[inTeam];
+		if(photonView != null)
+		{
+			photonView.RPC("GoalSync", RpcTarget.All, mScore[Team.Left], mScore[Team.Right]);
+		}
+	}
+	[PunRPC]
+	void GoalSync(int inL, int inR)
+	{
 		if(mIsGaol)
 		{
 			return;
 		}
-		if(mScore == null || !mScore.ContainsKey(inTeam))
-		{
-			return;
-		}
-
-		if(PhotonNetwork.LocalPlayer.IsMasterClient)
-		{
-			++mScore[inTeam];
-			photonView.RPC("SyncScore", RpcTarget.Others, mScore);
-		}
 		mTitle.gameObject.SetActive(true);
-		mTitle.text = string.Format("{0} - {1}", mScore[Team.Left], mScore[Team.Right]);
+		mTitle.text = string.Format("{0} - {1}", inL, inR);
 		mGoalTime = 5.0f;
 		mIsGaol = true;
 	}
@@ -138,10 +141,5 @@ public class GameManager : MonoBehaviourPunCallbacks
 	void Update()
 	{
 		UpdateGoalTime();
-	}
-	[PunRPC]
-	void SyncScore(Dictionary<Team, int> inScore)
-	{
-		mScore = inScore;
 	}
 }
