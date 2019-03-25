@@ -222,6 +222,7 @@ MonoBehaviour:
   OwnershipTransfer: 0
   ObservedComponents:
   - {fileID: 25}
+  - {fileID: 24}
   viewIdField: 2
   InstantiationId: 2
   isRuntimeInstantiated: 0
@@ -253,7 +254,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mRigidbody: {fileID: 20}
-  myPV: {fileID: 26}
   mPVTransform: {fileID: 25}
   mUserName: {fileID: 22}
 --- !u!65 &21

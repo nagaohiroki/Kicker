@@ -75,7 +75,9 @@ public class GameManager : MonoBehaviourPunCallbacks
 			}
 		}
 		var team = left >= right ? Team.Left : Team.Right;
-		player.SetTeam(team, mBall);
+		Debug.Log(team);
+		player.SetTeam(team);
+		player.SetBall(mBall);
 		mLogin.SetActive(false);
 	}
 	public void Goal(Team inTeam)

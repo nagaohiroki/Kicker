@@ -1,14 +1,12 @@
 ﻿using UnityEngine;
 using Photon.Pun;
 using System.Collections.Generic;
-public class PlayerKicker : MonoBehaviour
+public class PlayerKicker : MonoBehaviourPunCallbacks, IPunObservable
 {
 	public Transform CameraHandle{private get; set;}
 	public GameManager.Team Team{get; set;}
 	[SerializeField]
 	Rigidbody mRigidbody;
-	[SerializeField]
-	PhotonView myPV;
 	[SerializeField]
 	PhotonTransformView mPVTransform;
 	[SerializeField]
@@ -19,7 +17,7 @@ public class PlayerKicker : MonoBehaviour
 	///
 	/// @param inTeam
 	// ------------------------------------------------------------------------
-	public void SetTeam(GameManager.Team inTeam, GameObject inBall)
+	public void SetTeam(GameManager.Team inTeam)
 	{
 		Team = inTeam;
 		var dic = new Dictionary<GameManager.Team, Color>
@@ -28,6 +26,14 @@ public class PlayerKicker : MonoBehaviour
 			{GameManager.Team.Right, Color.blue},
 		};
 		mUserName.color = dic[inTeam];
+	}
+	// ------------------------------------------------------------------------
+	/// @brief ボール
+	///
+	/// @param inBall
+	// ------------------------------------------------------------------------
+	public void SetBall(GameObject inBall)
+	{
 		if(inBall == null)
 		{
 			return;
@@ -43,6 +49,21 @@ public class PlayerKicker : MonoBehaviour
 		}
 		mBallRigid.isKinematic = true;
 		mBallRigid.useGravity = false;
+	}
+	// ------------------------------------------------------------------------
+	/// @brief 同期
+	///
+	/// @param stream
+	/// @param info
+	// ------------------------------------------------------------------------
+	void IPunObservable.OnPhotonSerializeView(PhotonStream inStream, PhotonMessageInfo inInfo)
+	{
+		if (inStream.IsWriting)
+		{
+			inStream.SendNext(Team);
+			return;
+		}
+		SetTeam((GameManager.Team)inStream.ReceiveNext());
 	}
 	// ------------------------------------------------------------------------
 	/// @brief 自分更新
@@ -90,30 +111,30 @@ public class PlayerKicker : MonoBehaviour
 	// ------------------------------------------------------------------------
 	void Start()
 	{
-		if(myPV == null || mUserName == null || mRigidbody == null)
+		if(photonView == null || mUserName == null || mRigidbody == null)
 		{
 			return;
 		}
-		if(myPV.Owner != null)
+		if(photonView.Owner != null)
 		{
-			mUserName.text = myPV.Owner.NickName;
+			mUserName.text = photonView.Owner.NickName;
 		}
-		//	mRigidbody.isKinematic = !myPV.IsMine;
+		//	mRigidbody.isKinematic = !photonView.IsMine;
 	}
 	// ------------------------------------------------------------------------
 	/// @brief 更新
 	// ------------------------------------------------------------------------
 	void Update()
 	{
-		if(myPV != null && myPV.IsMine)
+		if(photonView != null && photonView.IsMine)
 		{
 			UpdateMine();
 			return;
 		}
 	}
-	void OnCollisionEnter(Collision inColl) 
+	void OnCollisionEnter(Collision inColl)
 	{
-		if (inColl.gameObject.layer != LayerMask.NameToLayer("Ball"))
+		if(inColl.gameObject.layer != LayerMask.NameToLayer("Ball"))
 		{
 			return;
 		}
