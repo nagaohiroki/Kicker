@@ -253,6 +253,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf958b107f1d30a438d22996bce05836, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mTeam: 0
   mRigidbody: {fileID: 20}
   mPVTransform: {fileID: 25}
   mUserName: {fileID: 22}

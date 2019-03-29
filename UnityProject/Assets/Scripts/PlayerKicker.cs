@@ -3,8 +3,8 @@ using Photon.Pun;
 using System.Collections.Generic;
 public class PlayerKicker : MonoBehaviourPunCallbacks, IPunObservable
 {
-	public Transform CameraHandle{private get; set;}
-	public GameManager.Team Team{get; set;}
+	[SerializeField]
+	GameManager.Team mTeam;
 	[SerializeField]
 	Rigidbody mRigidbody;
 	[SerializeField]
@@ -12,28 +12,47 @@ public class PlayerKicker : MonoBehaviourPunCallbacks, IPunObservable
 	[SerializeField]
 	TextMesh mUserName;
 	Rigidbody mBallRigid;
+	Transform mCameraHandle;
 	// ------------------------------------------------------------------------
 	/// @brief チームを設定
 	///
 	/// @param inTeam
 	// ------------------------------------------------------------------------
-	public void SetTeam(GameManager.Team inTeam)
+	void SetTeam()
 	{
-		Team = inTeam;
+		var players = FindObjectsOfType<PlayerKicker>();
+		int left = 0;
+		int right = 0;
+		foreach(var item in players)
+		{
+			switch(item.mTeam)
+			{
+			case GameManager.Team.Left:
+				++left;
+				break;
+			case GameManager.Team.Right:
+				++right;
+				break;
+			}
+		}
+		Debug.LogWarningFormat("{0}:{1}", left, right);
+		// mTeam = left < right ? GameManager.Team.Left : GameManager.Team.Right;
+		mTeam = Random.Range(0, 2) == 0 ? GameManager.Team.Left : GameManager.Team.Right;
 		var dic = new Dictionary<GameManager.Team, Color>
 		{
 			{GameManager.Team.Left, Color.red},
 			{GameManager.Team.Right, Color.blue},
 		};
-		mUserName.color = dic[inTeam];
+		mUserName.color = dic[mTeam];
 	}
 	// ------------------------------------------------------------------------
 	/// @brief ボール
 	///
 	/// @param inBall
 	// ------------------------------------------------------------------------
-	public void SetBall(GameObject inBall)
+	public void Initialize(GameObject inBall, Transform inCameraHandle)
 	{
+		mCameraHandle = inCameraHandle;
 		if(inBall == null)
 		{
 			return;
@@ -58,23 +77,23 @@ public class PlayerKicker : MonoBehaviourPunCallbacks, IPunObservable
 	// ------------------------------------------------------------------------
 	void IPunObservable.OnPhotonSerializeView(PhotonStream inStream, PhotonMessageInfo inInfo)
 	{
-		if (inStream.IsWriting)
+		if(inStream.IsWriting)
 		{
-			inStream.SendNext(Team);
+			inStream.SendNext(mTeam);
 			return;
 		}
-		SetTeam((GameManager.Team)inStream.ReceiveNext());
+		mTeam = (GameManager.Team)inStream.ReceiveNext();
 	}
 	// ------------------------------------------------------------------------
 	/// @brief 自分更新
 	// ------------------------------------------------------------------------
 	void UpdateMine()
 	{
-		if(mRigidbody == null || CameraHandle == null || mPVTransform == null)
+		if(mRigidbody == null || mCameraHandle == null || mPVTransform == null)
 		{
 			return;
 		}
-		CameraHandle.transform.position = transform.position;
+		mCameraHandle.transform.position = transform.position;
 		var vec = Vector3.zero;
 		const float minSpeed = 0.25f;
 		vec.x = Input.GetAxis("Horizontal");
@@ -120,6 +139,7 @@ public class PlayerKicker : MonoBehaviourPunCallbacks, IPunObservable
 			mUserName.text = photonView.Owner.NickName;
 		}
 		//	mRigidbody.isKinematic = !photonView.IsMine;
+		SetTeam();
 	}
 	// ------------------------------------------------------------------------
 	/// @brief 更新
